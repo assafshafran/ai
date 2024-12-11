@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PhAI Chat Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            margin-top: 50px;
+            background: #ffffff;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #4e7ed8;
+            padding: 15px;
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: inline-block;
+            word-wrap: break-word;
+            clear: both;
+        }
+
+        .message.bot {
+            background: #e8f0fe;
+            align-self: flex-start;
+        }
+
+        .message.user {
+            background: #d1ffd5;
+            align-self: flex-end;
+        }
+
+        /* Hide input for demo */
+        .chat-input {
+            display: none;
+        }
+
+        .typing-indicator {
+            width: 25px;
+            height: 10px;
+            margin: 0 0 15px 0;
+            display: inline-block;
+            position: relative;
+        }
+
+        .typing-indicator::before,
+        .typing-indicator::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 5px;
+            height: 5px;
+            background: #666;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator::before {
+            left: 0;
+            animation-delay: -0.32s;
+        }
+
+        .typing-indicator::after {
+            left: 10px;
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">PhAI</div>
+        <div class="chat-messages" id="chat-messages">
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="Type your message..." />
+            <button>Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Scripted conversation
+        // speaker: 'user' or 'bot'
+        // We will type out user messages, but bot messages appear instantly.
+        const conversation = [
+            { speaker: 'user', text: 'Hi PhAI, I have an idea about how AI could help in my daily work.' },
+            { speaker: 'bot', text: 'Hi there! Great to hear from you. Before we dive in, could you tell me which department or role you’re in so I can better understand your work environment?' },
+            { speaker: 'user', text: 'Sure, I’m in the Quality Control (QC) department.' },
+            { speaker: 'bot', text: 'Thanks for sharing that. Could you tell me about a task or process in QC that you think might be improved with AI?' },
+            { speaker: 'user', text: 'One recurring challenge is analyzing large sets of production data to spot quality issues early. It’s time-consuming and often we only detect problems after they’ve impacted production runs.' },
+            { speaker: 'bot', text: 'That’s a great starting point. So you have a large volume of production data and want to catch quality issues earlier. How do you think AI could help with that?' },
+            { speaker: 'user', text: 'Maybe we could use an AI-driven tool that continuously monitors our data streams and flags anomalies—like a sudden drop in a certain nutrient level or unexpected changes in temperature—before we run into a full-blown quality incident.' },
+            { speaker: 'bot', text: 'Excellent idea! An anomaly detection system could alert your team to subtle changes that might be hard to spot manually. Could you tell me more about the nature of this data? For instance, what data points are you currently reviewing, and how frequently do you check them?' },
+            { speaker: 'user', text: 'We typically look at nutrient levels, pH values, and temperature readings from various production stages. We review them once per batch run, which could be several times a day, but it’s not continuous monitoring. We often rely on sampling or after-the-fact analysis.' },
+            { speaker: 'bot', text: 'Understood. So continuous, real-time monitoring and anomaly detection could help you intervene sooner. That would potentially save resources and maintain a higher quality standard. Anything else you’d like to add about how this system would integrate with your current workflow?' },
+            { speaker: 'user', text: 'Ideally, it should integrate with our existing production dashboard so QC staff can see alerts right away without switching tools. Also, if it could learn over time what “normal” looks like, that’d reduce false alarms.' },
+            { speaker: 'bot', text: 'Perfect. I’ve recorded:\n- Department: QC\n- Task: Monitoring production quality metrics (nutrient levels, pH, temperature)\n- Idea: An AI-driven anomaly detection system integrated into the current dashboard for continuous monitoring, early alerts, and adaptive learning to minimize false positives.\n\nDo you want to add anything else, or is this a good summary of your suggestion?' },
+            { speaker: 'user', text: 'That’s a good summary. I think this idea would really help our QC team maintain consistent product quality.' },
+            { speaker: 'bot', text: 'Got it! Your suggestion has been recorded. The innovation team will review your idea and consider next steps. Thanks for sharing, and feel free to come back if you think of anything else!' },
+        ];
+
+        const chatMessages = document.getElementById('chat-messages');
+
+        function appendMessageInstant(speaker, text) {
+            const messageElem = document.createElement('div');
+            messageElem.className = `message ${speaker}`;
+            messageElem.innerHTML = text.replace(/\n/g, '<br/>');
+            chatMessages.appendChild(messageElem);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Typing effect for user messages
+        function typeUserMessage(text, callback) {
+            // Simulate typing for user message
+            const messageElem = document.createElement('div');
+            messageElem.className = 'message user';
+            chatMessages.appendChild(messageElem);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            let i = 0;
+            const typingSpeed = 40; // ms per character
+            function typeChar() {
+                if (i < text.length) {
+                    messageElem.innerHTML += text[i] === '\n' ? '<br/>' : text[i];
+                    i++;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    setTimeout(typeChar, typingSpeed);
+                } else {
+                    if (callback) callback();
+                }
+            }
+            typeChar();
+        }
+
+        function playConversation(index = 0) {
+            if (index < conversation.length) {
+                const { speaker, text } = conversation[index];
+                if (speaker === 'user') {
+                    // User messages typed out
+                    typeUserMessage(text, () => {
+                        setTimeout(() => {
+                            playConversation(index + 1);
+                        }, 1500);
+                    });
+                } else {
+                    // Bot messages appear instantly
+                    appendMessageInstant(speaker, text);
+                    setTimeout(() => {
+                        playConversation(index + 1);
+                    }, 1500);
+                }
+            }
+        }
+
+        // Start the simulation
+        playConversation();
+    </script>
+</body>
+
+</html>
