@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Poetry Worksheet</title>
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+   
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f9f9f9;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 80%;
+            margin-top: 20px;
+        }
+        .comments {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            overflow-y: auto;
+            height: 600px;
+        }
+        .poem {
+            flex: 2;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #000;
+            background-color: #fff;
+            height: 600px;
+            overflow-y: auto;
+            position: relative;
+            direction: rtl;
+        }
+        .poem span {
+            background-color: yellow;
+            cursor: pointer;
+        }
+        .input-section {
+            margin: 20px;
+            width: 80%;
+        }
+        .input-section textarea, .input-section input {
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 1rem;
+        }
+        .input-section button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Collaborative Poetry Worksheet</h1>
+
+    <div class="container">
+        <div class="comments" id="left-comments">
+            <!-- Left comments appear here -->
+        </div>
+
+        <div class="poem" id="poem">
+            <p>
+                שושנים הן <span data-word="red">אדומות</span>,<br>
+                סיגליות הן <span data-word="blue">כחולות</span>,<br>
+                סוכר הוא <span data-word="sweet">מתוק</span>,<br>
+                וכך גם <span data-word="you">אתה</span>.
+            </p>
+        </div>
+
+        <div class="comments" id="right-comments">
+            <!-- Right comments appear here -->
+        </div>
+    </div>
+
+    <div class="input-section">
+        <textarea id="comment" rows="4" placeholder="הוסף את ההערה שלך כאן..."></textarea>
+        <input type="text" id="highlight" placeholder="המילה או הביטוי עליו אתה מעיר">
+        <button onclick="addComment()">הוסף הערה</button>
+    </div>
+
+    <script>
+        // Firebase configuration
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC7-uVT7c1nFdw9jfS_e2jsMO8y1RsnPGU",
+  authDomain: "esther-poetry-talmud.firebaseapp.com",
+  databaseURL: "https://esther-poetry-talmud-default-rtdb.firebaseio.com",
+  projectId: "esther-poetry-talmud",
+  storageBucket: "esther-poetry-talmud.firebasestorage.app",
+  messagingSenderId: "400649726147",
+  appId: "1:400649726147:web:74979f39624f5d99175a76"
+};
+   
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const commentsRef = database.ref("comments");
+
+        // Fetch existing comments and listen for new ones
+        commentsRef.on("value", (snapshot) => {
+            const data = snapshot.val();
+            renderComments(data);
+        });
+
+        function addComment() {
+            const commentText = document.getElementById("comment").value;
+            const highlight = document.getElementById("highlight").value;
+            if (!commentText || !highlight) {
+                alert("אנא מלא את כל השדות.");
+                return;
+            }
+
+            const comment = {
+                text: commentText,
+                highlight: highlight
+            };
+
+            commentsRef.push(comment);
+
+            document.getElementById("comment").value = "";
+            document.getElementById("highlight").value = "";
+        }
+
+        function renderComments(data) {
+            const leftContainer = document.getElementById("left-comments");
+            const rightContainer = document.getElementById("right-comments");
+            leftContainer.innerHTML = "";
+            rightContainer.innerHTML = "";
+
+            if (data) {
+                const comments = Object.values(data);
+                comments.forEach((comment, index) => {
+                    const container = index % 2 === 0 ? leftContainer : rightContainer;
+                    const div = document.createElement("div");
+                    div.innerHTML = `<strong>${comment.highlight}:</strong> ${comment.text}`;
+                    container.appendChild(div);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
