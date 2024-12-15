@@ -4,160 +4,292 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Collaborative Poetry Worksheet</title>
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-   
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            background-color: #f9f9f9;
+            background: linear-gradient(to bottom, #ffefd5, #ffe4e1);
+            height: 100vh;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #4a90e2;
+            text-shadow: 2px 2px #f6b93b;
+            margin-bottom: 20px;
+        }
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
         }
         .container {
-            display: flex;
-            flex-direction: row;
-            width: 80%;
-            margin-top: 20px;
+            display: grid;
+            grid-template-areas: 
+                "top top top"
+                "left center right"
+                "bottom bottom bottom";
+            grid-template-columns: 20% 60% 20%;
+            grid-template-rows: 20% auto 20%;
+            width: 90%;
+            height: 90%;
+            gap: 10px;
+            box-sizing: border-box;
         }
         .comments {
-            flex: 1;
+            border: 2px solid #ffc107;
+            background: #fff;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            font-size: 14px;
             padding: 10px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            overflow-y: auto;
-            height: 600px;
+            direction: rtl;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+            height: 100%;
+            overflow-y: hidden;
+        }
+        .top-comments {
+            grid-area: top;
+        }
+        .left-comments {
+            grid-area: left;
+        }
+        .right-comments {
+            grid-area: right;
+        }
+        .bottom-comments {
+            grid-area: bottom;
         }
         .poem {
-            flex: 2;
+            grid-area: center;
             padding: 20px;
             text-align: center;
-            border: 2px solid #000;
+            border: 2px solid #4a90e2;
             background-color: #fff;
-            height: 600px;
             overflow-y: auto;
-            position: relative;
             direction: rtl;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
         }
         .poem span {
-            background-color: yellow;
             cursor: pointer;
+            color: #e74c3c;
+            font-weight: bold;
         }
         .input-section {
-            margin: 20px;
-            width: 80%;
+            margin: 10px 0;
+            width: 90%;
+            direction: rtl;
         }
         .input-section textarea, .input-section input {
             width: 100%;
             margin: 5px 0;
             padding: 10px;
             font-size: 1rem;
+            text-align: right;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         .input-section button {
             padding: 10px;
-            background-color: #007BFF;
+            background-color: #4a90e2;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .input-section button:hover {
+            background-color: #357abd;
+        }
+        .sheet-controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .sheet-controls button {
+            padding: 10px;
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+        }
+        .sheet-controls button:hover {
+            background-color: #e55b50;
         }
     </style>
 </head>
 <body>
-    <h1>Collaborative Poetry Worksheet</h1>
+    <h1>×©××ª××¤×××ª ×¡×¤×¨××ª××ª ×××¨××××××ª ×©× ××¡×ª×¨</h1>
 
-    <div class="container">
-        <div class="comments" id="left-comments">
-            <!-- Left comments appear here -->
-        </div>
+    <div class="sheet-controls">
+        <button onclick="createNewSheet()">Create New Sheet</button>
+        <button onclick="editCurrentText()">Add/Edit Text</button>
+    </div>
 
-        <div class="poem" id="poem">
-            <p>
-                שושנים הן <span data-word="red">אדומות</span>,<br>
-                סיגליות הן <span data-word="blue">כחולות</span>,<br>
-                סוכר הוא <span data-word="sweet">מתוק</span>,<br>
-                וכך גם <span data-word="you">אתה</span>.
-            </p>
-        </div>
-
-        <div class="comments" id="right-comments">
-            <!-- Right comments appear here -->
+    <div class="wrapper">
+        <div class="container">
+            <div class="comments top-comments" id="top-comments"></div>
+            <div class="comments left-comments" id="left-comments"></div>
+            <div class="poem" id="poem">
+                <textarea id="editable-poem" rows="10" style="width: 100%; text-align: right; direction: rtl;">×©××©× ×× ×× ××××××ª,
+×¡××××××ª ×× ××××××ª,
+×¡×××¨ ××× ××ª××§,
+××× ×× ××ª×.</textarea>
+                <button id="apply-button" onclick="applyText()">Apply Text</button>
+            </div>
+            <div class="comments right-comments" id="right-comments"></div>
+            <div class="comments bottom-comments" id="bottom-comments"></div>
         </div>
     </div>
 
     <div class="input-section">
-        <textarea id="comment" rows="4" placeholder="הוסף את ההערה שלך כאן..."></textarea>
-        <input type="text" id="highlight" placeholder="המילה או הביטוי עליו אתה מעיר">
-        <button onclick="addComment()">הוסף הערה</button>
+        <input id="name" type="text" placeholder="××× ×¡ ××ª ×©×× ×××...">
+        <textarea id="comment" rows="4" placeholder="×××¡×£ ××ª ×××¢×¨× ×©×× ×××..."></textarea>
+        <button onclick="addComment()">×××¡×£ ××¢×¨×</button>
     </div>
 
     <script>
-        // Firebase configuration
+        let comments = { top: [], left: [], right: [], bottom: [] };
+        const wordComments = {};
+        const colors = {};
+        let colorIndex = 0;
+        const colorPalette = ["#FF6347", "#4682B4", "#32CD32", "#FFD700", "#8A2BE2", "#9b59b6", "#2ecc71", "#1abc9c"];
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC7-uVT7c1nFdw9jfS_e2jsMO8y1RsnPGU",
-  authDomain: "esther-poetry-talmud.firebaseapp.com",
-  databaseURL: "https://esther-poetry-talmud-default-rtdb.firebaseio.com",
-  projectId: "esther-poetry-talmud",
-  storageBucket: "esther-poetry-talmud.firebasestorage.app",
-  messagingSenderId: "400649726147",
-  appId: "1:400649726147:web:74979f39624f5d99175a76"
-};
-   
+        function getColorForName(name) {
+            if (!colors[name]) {
+                colors[name] = colorPalette[colorIndex % colorPalette.length];
+                colorIndex++;
+            }
+            return colors[name];
+        }
 
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        function applyText() {
+            const poemText = document.getElementById("editable-poem").value;
+            const poemContainer = document.getElementById("poem");
+            poemContainer.innerHTML = `<p id='poem-text'></p>`;
+            const poemParagraph = document.getElementById("poem-text");
+            const words = poemText.split(/(\s|,|\.)/);
+            poemParagraph.innerHTML = words
+                .map(word => word.trim() ? `<span class='poem-word' onclick='selectWord("${word}")'>${word}</span>` : word)
+                .join('');
 
-        const commentsRef = database.ref("comments");
+            const applyButton = document.getElementById("apply-button");
+            if (applyButton) {
+                applyButton.remove();
+            }
+        }
 
-        // Fetch existing comments and listen for new ones
-        commentsRef.on("value", (snapshot) => {
-            const data = snapshot.val();
-            renderComments(data);
-        });
+        function renderComments() {
+            const sortedComments = Object.entries(wordComments).sort(([wordA], [wordB]) => {
+                const poemText = document.getElementById("poem-text")?.innerText || "";
+                return poemText.indexOf(wordA) - poemText.indexOf(wordB);
+            });
+
+            ["top", "left", "right", "bottom"].forEach(side => {
+                const container = document.getElementById(`${side}-comments`);
+                container.innerHTML = "";
+            });
+
+            sortedComments.forEach(([word, comments]) => {
+                comments.forEach(comment => {
+                    const side = "top"; // Comment placement logic (all in 'top' for now)
+                    const container = document.getElementById(`${side}-comments`);
+
+                    let lastChild = container.lastChild;
+                    if (lastChild && lastChild.tagName === "DIV" && lastChild.innerText.trim().endsWith(".")) {
+                        lastChild.innerHTML += ` ${comment.text}`;
+                    } else {
+                        const div = document.createElement("div");
+                        div.style.color = getColorForName(comment.name);
+                        div.style.display = "inline";
+                        div.innerHTML = `<strong>${word}</strong>: ${comment.text}`;
+                        container.appendChild(div);
+                    }
+                });
+            });
+
+            // Enable scrolling only if all areas are filled
+            ["top", "left", "right", "bottom"].forEach(side => {
+                const container = document.getElementById(`${side}-comments`);
+                container.style.overflowY = container.scrollHeight > container.clientHeight ? "auto" : "hidden";
+            });
+        }
 
         function addComment() {
+            const name = document.getElementById("name").value;
             const commentText = document.getElementById("comment").value;
-            const highlight = document.getElementById("highlight").value;
-            if (!commentText || !highlight) {
-                alert("אנא מלא את כל השדות.");
+            const selectedWord = document.getElementById("comment").dataset.selectedWord || "";
+
+            if (!name) {
+                alert("×× × ××× ×¡ ××ª ×©××.");
                 return;
             }
 
-            const comment = {
-                text: commentText,
-                highlight: highlight
-            };
+            if (!commentText) {
+                alert("×× × ×××¡×£ ××¢×¨×.");
+                return;
+            }
 
-            commentsRef.push(comment);
+            if (!wordComments[selectedWord]) {
+                wordComments[selectedWord] = [];
+            }
 
+            wordComments[selectedWord].push({ name, text: commentText });
+            renderComments();
+
+            document.getElementById("name").value = "";
             document.getElementById("comment").value = "";
-            document.getElementById("highlight").value = "";
+            document.getElementById("comment").placeholder = "×××¡×£ ××ª ×××¢×¨× ×©×× ×××...";
         }
 
-        function renderComments(data) {
-            const leftContainer = document.getElementById("left-comments");
-            const rightContainer = document.getElementById("right-comments");
-            leftContainer.innerHTML = "";
-            rightContainer.innerHTML = "";
+        function createNewSheet() {
+            if (confirm("Are you sure you want to create a new sheet? All unsaved changes will be lost.")) {
+                comments = { top: [], left: [], right: [], bottom: [] };
+                Object.keys(wordComments).forEach(key => delete wordComments[key]);
 
-            if (data) {
-                const comments = Object.values(data);
-                comments.forEach((comment, index) => {
-                    const container = index % 2 === 0 ? leftContainer : rightContainer;
-                    const div = document.createElement("div");
-                    div.innerHTML = `<strong>${comment.highlight}:</strong> ${comment.text}`;
-                    container.appendChild(div);
-                });
+                const poemContainer = document.getElementById("poem");
+                poemContainer.innerHTML = `
+                    <textarea id="editable-poem" rows="10" style="width: 100%; text-align: right; direction: rtl;"></textarea>
+                    <button id="apply-button" onclick="applyText()">Apply Text</button>
+                `;
+                renderComments();
             }
         }
+
+        function editCurrentText() {
+            const currentText = document.getElementById("poem-text")?.innerText || "";
+            const newText = prompt("Edit or add new text:", currentText);
+
+            if (newText !== null) {
+                const poemContainer = document.getElementById("poem");
+                poemContainer.innerHTML = `
+                    <textarea id="editable-poem" rows="10" style="width: 100%; text-align: right; direction: rtl;">${newText}</textarea>
+                    <button id="apply-button" onclick="applyText()">Apply Text</button>
+                `;
+                applyText();
+            }
+        }
+
+        function selectWord(word) {
+            const commentBox = document.getElementById("comment");
+            commentBox.placeholder = `×××¡×£ ××ª ×××¢×¨× ×©×× ×¢× "${word}" ×××...`;
+            commentBox.dataset.selectedWord = word;
+        }
+
+        document.addEventListener("DOMContentLoaded", applyText);
     </script>
 </body>
 </html>
